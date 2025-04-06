@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Yandex Image Search</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .search-box {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px 0 0 5px;
+            font-size: 16px;
+        }
+        .search-button {
+            background-color: #f00; /* Yandex red */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .search-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .option-group {
+            margin-bottom: 10px;
+        }
+        .option-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .option-group select,
+        .option-group input[type="text"],
+        .option-group input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        #results-container {
+            margin-top: 20px;
+            border-top: 1px solid #ccc;
+            padding-top: 20px;
+        }
+        #results-container h2 {
+            margin-top: 0;
+        }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        .image-item {
+            border: 1px solid #eee;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .image-item img {
+            width: 100%;
+            display: block;
+        }
+        .image-item a {
+            display: block;
+            text-decoration: none;
+            color: #333;
+        }
+        .loading-message {
+            text-align: center;
+            font-style: italic;
+            color: #777;
+        }
+        .error-message {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Advanced Yandex Image Search</h1>
+        <div class="search-box">
+            <input type="text" id="query" class="search-input" placeholder="Enter your search query">
+            <button class="search-button" onclick="searchImages()">Search</button>
+        </div>
+
+        <div class="search-options">
+            <div class="option-group">
+                <label for="family">Family Filter:</label>
+                <select id="family" name="family">
+                    <option value="">Any</option>
+                    <option value="strict">Strict</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="soft">Soft</option>
+                </select>
+            </div>
+
+            <div class="option-group">
+                <label for="size">Image Size:</label>
+                <select id="size" name="size">
+                    <option value="">Any</option>
+                    <option value="large">Large</option>
+                    <option value="medium">Medium</option>
+                    <option value="small">Small</option>
+                </select>
+            </div>
+
+            <div class="option-group">
+                <label for="color">Color:</label>
+                <select id="color" name="color">
+                    <option value="">Any</option>
+                    <option value="black">Black</option>
+                    <option value="white">White</option>
+                    <option value="gray">Gray</option>
+                    <option value="red">Red</option>
+                    <option value="orange">Orange</option>
+                    <option value="yellow">Yellow</option>
+                    <option value="green">Green</option>
+                    <option value="cyan">Cyan</option>
+                    <option value="blue">Blue</option>
+                    <option value="purple">Purple</option>
+                    <option value="brown">Brown</option>
+                    <option value="transparent">Transparent</option>
+                </select>
+            </div>
+
+            <div class="option-group">
+                <label for="orientation">Orientation:</label>
+                <select id="orientation" name="orientation">
+                    <option value="">Any</option>
+                    <option value="horizontal">Horizontal</option>
+                    <option value="vertical">Vertical</option>
+                    <option value="square">Square</option>
+                </select>
+            </div>
+
+            <div class="option-group">
+                <label for="image_type">Image Type:</label>
+                <select id="image_type" name="image_type">
+                    <option value="">Any</option>
+                    <option value="photo">Photo</option>
+                    <option value="clipart">Clipart</option>
+                    <option value="drawing">Drawing</option>
+                    <option value="demotivator">Demotivator</option>
+                </select>
+            </div>
+
+            <div class="option-group">
+                <label for="domain">Site/Domain:</label>
+                <input type="text" id="domain" name="domain" placeholder="e.g., example.com">
+            </div>
+
+            <div class="option-group">
+                <label for="width">Width (px):</label>
+                <input type="number" id="width" name="width" placeholder="e.g., 800">
+            </div>
+
+            <div class="option-group">
+                <label for="height">Height (px):</label>
+                <input type="number" id="height" name="height" placeholder="e.g., 600">
+            </div>
+        </div>
+
+        <div id="results-container">
+            <h2>Search Results</h2>
+            <div id="loading" class="loading-message" style="display:none;">Searching for images...</div>
+            <div id="error" class="error-message" style="display:none;"></div>
+            <div id="image-results" class="image-grid">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        function buildYandexImageUrl(query, params = {}) {
+            let url = 'https://yandex.com/images/search?text=' + encodeURIComponent(query);
+            for (const key in params) {
+                if (params[key]) {
+                    url += `&${key}=${encodeURIComponent(params[key])}`;
+                }
+            }
+            return url;
+        }
+
+        async function searchImages() {
+            const query = document.getElementById('query').value;
+            if (!query.trim()) {
+                alert('Please enter a search query.');
+                return;
+            }
+
+            const family = document.getElementById('family').value;
+            const size = document.getElementById('size').value;
+            const color = document.getElementById('color').value;
+            const orientation = document.getElementById('orientation').value;
+            const image_type = document.getElementById('image_type').value;
+            const domain = document.getElementById('domain').value;
+            const width = document.getElementById('width').value;
+            const height = document.getElementById('height').value;
+
+            const searchParams = {
+                family: family,
+                img_size: size,
+                icolor: color,
+                orientation: orientation,
+                itype: image_type,
+                domain: domain,
+                isize: (width && height) ? `${width}x${height}` : '',
+                iw: width,
+                ih: height,
+            };
+
+            const yandexImageUrl = buildYandexImageUrl(query, searchParams);
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('image-results').innerHTML = '';
+
+            // **Important Note:** Directly fetching and parsing Yandex image search results
+            // from JavaScript running in a browser is generally **not possible** due to
+            // Cross-Origin Resource Sharing (CORS) restrictions.
+
+            // Yandex does not provide a public API that allows direct JSONP or CORS
+            // requests for their image search results from client-side JavaScript.
+
+            // The code below demonstrates how you would *construct* the advanced
+            // Yandex Image Search URL, which you can then:
+
+            // 1. Open in a new tab/window:
+            window.open(yandexImageUrl, '_blank');
+
+            // 2. Use a server-side proxy: You would need to create a server-side script
+            //    (e.g., in Node.js, Python, PHP) that makes the request to Yandex,
+            //    parses the HTML response, extracts the image URLs, and then sends
+            //    that data back to your client-side JavaScript. This is a more
+            //    complex approach but necessary to overcome CORS limitations.
+
+            console.log("Yandex Image Search URL:", yandexImageUrl);
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('image-results').innerHTML = '<p>The advanced Yandex Image Search URL has been generated and opened in a new tab (or logged in the console). Due to browser security restrictions (CORS), directly fetching and displaying results within this page is not possible without a server-side proxy.</p>';
+        }
+    </script>
+</body>
+</html>
